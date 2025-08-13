@@ -1,145 +1,76 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Otomatik Sesli Tercüman</title>
-<style>
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background: linear-gradient(135deg, #1f2937, #111827);
-        color: #fff;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-height: 100vh;
-    }
-    header {
-        text-align: center;
-        padding: 20px;
-    }
-    header h1 {
-        margin: 0;
-        font-size: 1.8rem;
-        color: #6ee7b7;
-    }
-    main {
-        width: 100%;
-        max-width: 500px;
-        padding: 20px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        margin-top: 20px;
-    }
-    .selects {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    select {
-        flex: 1;
-        padding: 10px;
-        border-radius: 8px;
-        border: none;
-        background: rgba(255,255,255,0.1);
-        color: #fff;
-    }
-    button {
-        width: 100%;
-        padding: 12px;
-        font-size: 16px;
-        font-weight: bold;
-        background: linear-gradient(90deg, #0ea5a1, #34d399);
-        color: #042018;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        margin-bottom: 20px;
-    }
-    .box {
-        padding: 10px;
-        background: rgba(255,255,255,0.08);
-        border-radius: 8px;
-        min-height: 60px;
-        margin-bottom: 10px;
-    }
-    footer {
-        margin-top: auto;
-        padding: 10px;
-        font-size: 13px;
-        color: #9ca3af;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talk2Translate</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            text-align: center;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #ff4081;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #f50057;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 1.1em;
+        }
+    </style>
 </head>
 <body>
 
-<header>
-    <h1>🎙️ Otomatik Sesli Tercüman</h1>
-</header>
+    <h1>🎤 Talk2Translate</h1>
+    <p>Dilediğiniz dilde konuşun, anında çevirin!</p>
+    
+    <button id="startBtn">Dinlemeyi Başlat</button>
+    <p id="status">Hazır</p>
 
-<main>
-    <div class="selects">
-        <select id="targetLang">
-            <option value="en">English</option>
-            <option value="tr">Türkçe</option>
-            <option value="es">Español</option>
-            <option value="de">Deutsch</option>
-            <option value="fr">Français</option>
-        </select>
-    </div>
-    <button id="startBtn">🎤 Dinlemeyi Başlat</button>
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const statusText = document.getElementById('status');
 
-    <div>
-        <strong>Algılanan Cümle:</strong>
-        <div id="detectedText" class="box"></div>
-    </div>
-    <div>
-        <strong>Çeviri:</strong>
-        <div id="translatedText" class="box"></div>
-    </div>
-</main>
+        startBtn.addEventListener('click', function() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(function(stream) {
+                        statusText.textContent = "Mikrofon izni verildi. Artık konuşabilirsiniz.";
+                        statusText.style.color = "lightgreen";
+                        console.log("Mikrofon izni alındı.");
+                        // Burada çeviri veya ses işleme kodun başlayacak
+                    })
+                    .catch(function(err) {
+                        statusText.textContent = "Mikrofon izni reddedildi!";
+                        statusText.style.color = "red";
+                        console.error("Mikrofon izni reddedildi:", err);
+                    });
+            } else {
+                alert("Tarayıcınız mikrofon desteği sunmuyor.");
+            }
+        });
+    </script>
 
-<footer>
-    © 2025 Otomatik Sesli Tercüman
-</footer>
-
-<script>
-let recognizing = false;
-let recognition;
-
-document.getElementById('startBtn').addEventListener('click', () => {
-    if (!recognizing) {
-        startRecognition();
-    } else {
-        stopRecognition();
-    }
-});
-
-function startRecognition() {
-    if (!('webkitSpeechRecognition' in window)) {
-        alert("Tarayıcınız konuşma tanımayı desteklemiyor!");
-        return;
-    }
-    recognition = new webkitSpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'tr-TR'; // Başlangıç dili fark etmez, çünkü detect yapacağız
-
-    recognition.onstart = () => {
-        recognizing = true;
-        document.getElementById('startBtn').textContent = "⏹ Durdur";
-    };
-
-    recognition.onresult = async (event) => {
-        let text = event.results[0][0].transcript;
-        document.getElementById('detectedText').textContent = text;
-
-        let detectedLang = await detectLanguage(text);
-        let targetLang = document.getElementById('targetLang').value;
-
-        // Eğer tespit edilen dil hedef dile eşitse, otomatik tersine çevir
-        if (detectedLang === targetLang) {
-            detectedLa
+</body>
+</html>
